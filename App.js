@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, Animated } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 
 const notifications = [
@@ -42,16 +42,41 @@ const notifications = [
 ];
 
 const NotificationItem = ({ notification }) => {
-    return (
-        <View style={styles.notificationItem}>
-            <FontAwesome name={notification.icon} size={24} color="#3b82f6" />
-            <View style={styles.notificationText}>
-                <Text style={styles.title}>{notification.title}</Text>
-                <Text style={styles.description}>{notification.description}</Text>
-                <Text style={styles.date}>{notification.date}</Text>
-            </View>
-        </View>
-    );
+  const animatedValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+      Animated.loop(
+          Animated.timing(animatedValue, {
+              toValue: 1,
+              duration: 5000,
+              useNativeDriver: true,
+          })
+      ).start();
+  }, [animatedValue]);
+
+  const translateX = animatedValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [300, -300],
+  });
+
+  return (
+      <View style={styles.notificationItem}>
+          <FontAwesome name={notification.icon} size={24} color="#3b82f6" />
+          <View style={styles.notificationText}>
+              <View style={styles.animatedContainer}>
+                  <Animated.Text style={[styles.title, { transform: [{ translateX }] }]}>
+                      {notification.title}
+                  </Animated.Text>
+              </View>
+              <View style={styles.animatedContainer}>
+                  <Animated.Text style={[styles.description, { transform: [{ translateX }] }]}>
+                      {notification.description}
+                  </Animated.Text>
+              </View>
+              <Text style={styles.date}>{notification.date}</Text>
+          </View>
+      </View>
+  );
 };
 
 const App = () => {
@@ -71,7 +96,6 @@ const App = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
         padding: 16,
         backgroundColor: '#f9fafb',
     },
@@ -80,6 +104,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 16,
+        color: '#3b82f6',
     },
     notificationItem: {
         flexDirection: 'row',
@@ -91,16 +116,25 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 1,
         marginBottom: 8,
+        borderLeftWidth: 5,
+        borderLeftColor: '#3b82f6',
     },
     notificationText: {
         marginLeft: 16,
+        flex: 1,
+    },
+    animatedContainer: {
+        width: '100%', // Chiều rộng cố định để hiển thị một phần
+        overflow: 'hidden', // Ẩn phần chữ bị lấp
     },
     title: {
         fontWeight: 'bold',
         fontSize: 16,
+        marginBottom: 4,
     },
     description: {
         color: '#4b5563',
+        marginBottom: 4,
     },
     date: {
         color: '#6b7280',
